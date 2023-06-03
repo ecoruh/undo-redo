@@ -1,41 +1,71 @@
-import {Item} from './Item';
+import { ActionItem } from './ActionItem';
 import CareTaker from './CareTaker';
+import {Item} from './Item';
+
+/**
+ * Demonstrates how undo-redo works on a custom array.
+ */
 
 const list: Array<Item> = new Array<Item>;
 
-list.push({i: 1, n: 'hello', v: 'world'});
-list.push({i: 2, n: 'ergun', v: 'nugre'});
-list.push({i: 3, n: 'abra', v: 'cadabra'});
-list.push({i: 4, n: 'nova', v: 'scotia'});
-list.push({i: 5, n: 'eternal', v: 'rome'});
+list.push({index: 1, name: 'fred', value: 'dancer'});
+list.push({index: 2, name: 'arnold', value: 'actor'});
+list.push({index: 3, name: 'jack', value: 'ripper'});
+list.push({index: 4, name: 'tinker', value: 'soldier'});
+list.push({index: 5, name: 'boris', value: 'politician'});
 
-list.sort((a, b) => { return a.n.localeCompare(b.n) });
+list.sort((a, b) => { return a.name.localeCompare(b.name) });
 
-console.log(JSON.stringify(list,null,2));
-console.log('-------------------------');
+// console.log(JSON.stringify(list,null,2));
+// console.log('-------------------------');
 
-const ct: CareTaker = new CareTaker(list);
+/**
+ * Optional comperator for sort order.
+ * @param a First element to compare
+ * @param b Second element to compare
+ * @returns -1 (lt) 0 (eq) 1 (gt)
+ */
+const compareFn = (a: Item,b: Item) => a.name.localeCompare(b.name);
 
-const elt:Item = {i: 2, n: 'aram', v: 'katchaturyan'};
+/**
+ * Predicate used to match a primary element that exists in the list
+ * and an ActionItem that holds a buffered element.
+ * @param e Primary element to match the item in the ActionItem
+ * @param a An ActionItem that holds an item to match the primary element
+ * @returns true when elements match, false otherwise
+ */
+const predicateFn = (e: Item, a:ActionItem<Item>) => (e.name === a.item.name);
 
+/**
+ * CareTaker class accepts add, update, and delete on generic type 'I',
+ * while providing undo and redo functions and maintaining integrity of undo
+ * and redo stacks.
+ */
+const ct: CareTaker<Item> = new CareTaker<Item>(list, predicateFn, compareFn);
+
+const elt:Item = {index: 6, name: 'aram', value: 'composer'};
+console.assert(!list.includes(elt), 'aram does not exist');
 ct.add(elt);
-ct.update(list[2], 'coruh');
-ct.delete(list[2]);
+console.assert(list.includes(elt), 'aram was added');
 
-console.log(JSON.stringify(list,null,2));
-console.log('-------------------------');
+console.assert(list[3].value === 'dancer', 'fred is a dancer');
+ct.update(list[3], {index: 3, name: 'fred', value: 'accountant'});
+console.assert(list[3].value === 'accountant', 'fred became an accountant');
 
-ct.undo();
-
-console.log(JSON.stringify(list,null,2));
-console.log('-------------------------');
-
-ct.undo();
-
-console.log(JSON.stringify(list,null,2));
-console.log('-------------------------');
+console.assert(list[4].name === 'jack', 'jack exists');
+ct.delete(list[4]);
+console.assert(list.findIndex(elt =>
+  predicateFn(elt, { item: {index: 3, name: 'jack', value: 'ripper'}})) === -1,
+  'jack was deleted');
 
 ct.undo();
+console.assert(list[4].name === 'jack', 'jack was restored');
+
+ct.undo();
+console.assert(list[3].value === 'dancer', 'fred is a dancer again');
+
+ct.undo()
+console.assert(!list.includes(elt), 'aram does not exist');
 
 console.log(JSON.stringify(list,null,2));
 console.log('-------------------------');

@@ -1,22 +1,33 @@
-import {ActionItem} from  './Item';
-class UndoRedo {
-  undoStack: Array<ActionItem> = new Array<ActionItem>;
-  redoStack: Array<ActionItem> = new Array<ActionItem>;
+/**
+ * UndoRedo holds undo and redo stacks in unison
+ * They hold generic elements of 'A'.
+ */
+class UndoRedo<A> {
+  undoStack: Array<A> = new Array<A>;
+  redoStack: Array<A> = new Array<A>;
 
-  pushUndo(item: ActionItem) {
-    this.undoStack.push(item);
+  pushUndo(actionItem: A) {
+    this.undoStack.push(actionItem);
   }
 
-  popUndo(): ActionItem | undefined {
+  popUndo(): A | undefined {
     return this.undoStack.pop();
   }
 
-  pushRedo(item: ActionItem) {
-    this.redoStack.push(item);
+  isUndoEmpty(): boolean {
+    return this.undoStack.length === 0;
   }
 
-  popRedo(): ActionItem | undefined {
+  pushRedo(actionItem: A) {
+    this.redoStack.push(actionItem);
+  }
+
+  popRedo(): A | undefined {
     return this.redoStack.pop();
+  }
+
+  isRedoEmpty(): boolean {
+    return this.redoStack.length === 0;
   }
 }
 

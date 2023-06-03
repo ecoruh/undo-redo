@@ -1,57 +1,118 @@
-import {Item, Action, ActionItem} from './Item';
+import {Action, ActionItem} from './ActionItem';
 import UndoRedo from './UndoRedo';
-class CareTaker {
-  undoRedo: UndoRedo = new UndoRedo();
-  list: Array<Item>;
+/**
+ * CareTaker class accepts add, update, and delete on generic type 'I',
+ * while providing undo and redo functions and maintaining integrity of undo
+ * and redo stacks.
+ */
+class CareTaker<I> {
+  /**
+   * External list passed.
+   */
+  list: Array<I>;
+  /**
+   * Undo and redo stacks.
+   */
+  undoRedo: UndoRedo<ActionItem<I>> = new UndoRedo<ActionItem<I>>();
+  /**
+   * Optional comperator for sort order.
+   * returns: -1 (lt) 0 (eq) 1 (gt)
+   */
+  compareFn?: (a:I,b:I) => number;
+  /**
+   * Predicate used to match generic 'I' elements.
+   * returns true when elements match
+   * returns false when elements do not match
+   */
+  predicateFn: (e:I, a:ActionItem<I>) => boolean;
 
-  constructor(aList: Array<Item>) {
+  /**
+   * Constructor
+   * @param aList An external list of generic 'I'.
+   * @param predicateFn Used to match elements
+   * @param compareFn Used to sort (optional)
+   */
+  constructor(
+    aList: Array<I>,
+    predicateFn: (e:I, a:ActionItem<I>) => boolean,
+    compareFn?: (a:I, b:I) => number) {
     this.list = aList;
-  }
-  add(item: Item) {
-    this.list.push(item);
-    this.list.sort((a, b) => { return a.n.localeCompare(b.n) });
-    this.undoRedo.pushUndo({action: Action.Add, item: item});
+    this.predicateFn = predicateFn;
+    this.compareFn = compareFn;
   }
 
-  update(item: Item, value: string) {
-    this.undoRedo.pushUndo({action: Action.Update, item: item});
-    const ix: number | undefined = this.list.indexOf(item);
-    if (ix !== undefined) {
-      const elt: Item = JSON.parse(JSON.stringify(item));
-      elt.v = value;
-      this.list[ix] = elt;
+  /**
+   * Sorts the list, if comparator function was provided.
+   */
+  #handleSort () {
+    if (this.compareFn !== undefined) {
+      this.list.sort(this.compareFn);
     }
   }
 
-  delete(item: Item) {
-    this.undoRedo.pushUndo({action: Action.Delete, item: item});
-    const ix: number | undefined = this.list.indexOf(item);
-    delete this.list[ix];
+  /**
+   * Adds a new item and pushes it to the undo stack.
+   * @param item New item to add
+   */
+  add(item: I) {
+    this.list.push(item);
+    this.#handleSort();
+    this.undoRedo.pushUndo({action: Action.Add, item: item});
   }
 
+  /**
+   * Updates (overrides) an item if found via predicate function
+   * and pushes it to the undo stack.
+   * @param item Item to search
+   * @param newItem New item to override item with
+   */
+  update(item: I, newItem: I) {
+    const ix: number = this.list.findIndex(elt => this.predicateFn(elt, {item: newItem}));
+    if (ix > -1) {
+      this.undoRedo.pushUndo({action: Action.Update, item: item});
+      this.list[ix] = newItem;
+    }
+  }
+
+  /**
+   * Deletes an item present in the list and pushes it to the undo stack.
+   * @param item The item to remove from the list
+   */
+  delete(item: I) {
+    const ix: number | undefined = this.list.indexOf(item);
+    if (ix > -1) {
+      this.list.splice(ix, 1);
+      this.undoRedo.pushUndo({action: Action.Delete, item: item});
+    }
+  }
+
+  /**
+   * Pops one action-item from the undo stack and undo its action
+   * while pushing the action-item into the redo stack.
+   */
   undo() {
-    const actionItem: ActionItem | undefined = this.undoRedo.popUndo();
+    const actionItem: ActionItem<I> | undefined = this.undoRedo.popUndo();
     if (actionItem) {
       switch (actionItem.action) {
         case Action.Add: {
-          const ix: number | undefined = this.list.indexOf(actionItem.item);
-          delete this.list[ix];
+          const ix: number = this.list.indexOf(actionItem.item);
+          this.list.splice(ix, 1);
           this.undoRedo.pushRedo(actionItem);
         }
         break;
         case Action.Update: {
-          const item: Item | undefined = this.list.find(elt => elt.n === actionItem.item.n);
-          if (item !== undefined) {
-            const ix: number = this.list.indexOf(item);
+          const ix: number = this.list.findIndex(elt => this.predicateFn(elt, actionItem));
+          if (ix > -1) {
+            const item: I = JSON.parse(JSON.stringify(this.list[ix]));
             this.list[ix] = actionItem.item;
+            actionItem.item = item;
             this.undoRedo.pushRedo(actionItem);
           }
         }
         break;
         case Action.Delete: {
-          const ix: number | undefined = this.list.indexOf(actionItem.item);
           this.list.push(actionItem.item);
-          this.list.sort((a, b) => { return a.n.localeCompare(b.n) });
+          this.#handleSort();
           this.undoRedo.pushRedo(actionItem);
         }
         break;
@@ -59,32 +120,34 @@ class CareTaker {
     }
   }
 
-  redo() {
-    const actionItem: ActionItem | undefined = this.undoRedo.popRedo();
+ /**
+   * Pops one action-item from the redo stack and re-does its action
+   * while pushing the action-item into the undo stack.
+   */
+   redo() {
+    const actionItem: ActionItem<I> | undefined = this.undoRedo.popRedo();
     if (actionItem) {
       switch (actionItem.action) {
         case Action.Add: {
-          const ix: number | undefined = this.list.indexOf(actionItem.item);
           this.list.push(actionItem.item);
-          this.list.sort((a, b) => { return a.n.localeCompare(b.n) });
+          this.#handleSort();
           this.undoRedo.pushUndo(actionItem);
         }
         break;
         case Action.Update: {
-          const item: Item | undefined = this.list.find(element => element.n === actionItem.item.n);
-          if (item) {
-            const ix: number | undefined = this.list.indexOf(item);
-            this.list[ix].v = actionItem.item.v;
+          const ix: number = this.list.findIndex(elt => this.predicateFn(elt, actionItem));
+          if (ix > -1) {
+            const item: I = JSON.parse(JSON.stringify(this.list[ix]));
+            this.list[ix] = actionItem.item;
+            actionItem.item = item;
             this.undoRedo.pushUndo(actionItem);
           }
         }
         break;
         case Action.Delete: {
-          const ix: number | undefined = this.list.indexOf(actionItem.item);
-          if (ix !== undefined) {
-            delete this.list[ix];
-            this.undoRedo.pushUndo(actionItem);
-          }
+          const ix: number = this.list.indexOf(actionItem.item);
+          this.list.splice(ix, 1);
+          this.undoRedo.pushUndo(actionItem);
         }
       }
     }
