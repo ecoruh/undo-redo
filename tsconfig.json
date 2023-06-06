@@ -3,6 +3,8 @@
     "target": "es2016",                                  /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
     "lib": ["es6"],                                      /* Specify a set of bundled library declaration files that describe the target runtime environment. */
     "module": "commonjs",                                /* Specify what module code is generated. */
+    "moduleResolution": "node",
+    "sourceMap": true,
     "rootDir": "src",                                    /* Specify the root folder within your source files. */
     "resolveJsonModule": true,                           /* Enable importing .json files. */
     "allowJs": true,                                     /* Allow JavaScript files to be a part of your program. Use the 'checkJS' option to get errors from these files. */
