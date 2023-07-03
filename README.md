@@ -75,19 +75,19 @@ const predicateFn = (e: Item, a:ActionItem<Item>) => (e.name === a.item.name);
 
 /**
  * CareTaker class accepts add, update, and delete on generic type 'I',
- * while providing undo and redo functions and maintaining integrity of undo
- * and redo stacks.
+ * while providing undo and redo functions and maintaining integrity of
+ * undo and redo stacks.
  */
-const ct: CareTaker<Item> = new CareTaker<Item>(list, predicateFn, compareFn);
+const ct: CareTaker<Item> = new CareTaker<Item>(predicateFn, compareFn);
 ```
 
 Manipulate the list, while ability to undo or redo at will.
 
 ```javascript
-ct.add({index: 6, name: 'aram', value: 'composer'});
-ct.update(list[3], {index: 3, name: 'fred', value: 'accountant'});
-ct.delete(list[4]);
-ct.undo(); // undo delete
-ct.undo(); // undo update
-ct.redo(); // redo update
+ct.add(list, {index: 6, name: 'aram', value: 'composer'});
+ct.update(list, {index: 3, name: 'fred', value: 'accountant'});
+ct.delete(list, list[4]);
+ct.undo(list); // undo delete
+ct.undo(list); // undo update
+ct.redo(list); // redo update
 ```
