@@ -41,30 +41,30 @@ const predicateFn = (e: Item, a:ActionItem<Item>) => (e.name === a.item.name);
  * while providing undo and redo functions and maintaining integrity of undo
  * and redo stacks.
  */
-const ct: CareTaker<Item> = new CareTaker<Item>(list, predicateFn, compareFn);
+const ct: CareTaker<Item> = new CareTaker<Item>(predicateFn, compareFn);
 
 const elt:Item = {index: 6, name: 'aram', value: 'composer'};
 console.assert(!list.includes(elt), 'aram does not exist');
-ct.add(elt);
+ct.add(list, elt);
 console.assert(list.includes(elt), 'aram was added');
 
 console.assert(list[3].value === 'dancer', 'fred is a dancer');
-ct.update(list[3], {index: 3, name: 'fred', value: 'accountant'});
+ct.update(list, {index: 3, name: 'fred', value: 'accountant'});
 console.assert(list[3].value === 'accountant', 'fred became an accountant');
 
 console.assert(list[4].name === 'jack', 'jack exists');
-ct.delete(list[4]);
+ct.delete(list, list[4]);
 console.assert(list.findIndex(elt =>
   predicateFn(elt, { item: {index: 3, name: 'jack', value: 'ripper'}})) === -1,
   'jack was deleted');
 
-ct.undo();
+ct.undo(list);
 console.assert(list[4].name === 'jack', 'jack was restored');
 
-ct.undo();
+ct.undo(list);
 console.assert(list[3].value === 'dancer', 'fred is a dancer again');
 
-ct.undo()
+ct.undo(list)
 console.assert(!list.includes(elt), 'aram does not exist');
 
 console.log(JSON.stringify(list,null,2));

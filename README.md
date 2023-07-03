@@ -1,6 +1,37 @@
 # undo-redo
 
-An unopinionated undo/redo engine implemented in Typescript.
+An undo/redo engine implemented in Typescript.
+
+Imagine you have the following data structure.
+
+```javascript
+export interface Item {
+  index: number;
+  name: string;
+  value: string;
+}
+```
+
+The structure holds a simple Item with a unique id `index`, a `name`, and a `value`.
+
+Thus an array can hold objects of this type as follows.
+
+```javascript
+const list: Array<Item> = new Array<Item>;
+```
+
+Constraints:
+
+- When the list is presented typically it is sorted in alphabetical (ascending) order by the `name` field.
+- When you match the item with another one, their `index` field must have the same value.
+
+Requirements:
+
+- It must be possible to add, update, or delete items with a simple operation, as a result of which the previous value and the operation are pushed to an undo stack.
+- Each operation can be undone with a simple operation, provided that the undo stack is not empty.
+- An undo operation will push the current value and the operation to a redo stack.
+- Each operation can be redone with a simple operation, provided that the redo stack is not empty.
+- A redo operation will push the current value and the operation to the undo stack.
 
 To run the demo
 

@@ -1,5 +1,5 @@
 /**
- * A simple Item with a unique id i, name n, and value v
+ * A simple Item with a unique id index, a name, and a value
  */
 export interface Item {
   index: number;
