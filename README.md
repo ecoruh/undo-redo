@@ -71,7 +71,7 @@ const compareFn = (a: Item,b: Item) => a.name.localeCompare(b.name);
  * @param a An ActionItem that holds an item to match the primary element
  * @returns true when elements match, false otherwise
  */
-const predicateFn = (e: Item, a:ActionItem<Item>) => (e.name === a.item.name);
+const predicateFn = (e: Item, a:ActionItem<Item>) => (e.index === a.item.index);
 
 /**
  * CareTaker class accepts add, update, and delete on generic type 'I',

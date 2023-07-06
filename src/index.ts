@@ -34,7 +34,7 @@ const compareFn = (a: Item,b: Item) => a.name.localeCompare(b.name);
  * @param a An ActionItem that holds an item to match the primary element
  * @returns true when elements match, false otherwise
  */
-const predicateFn = (e: Item, a:ActionItem<Item>) => (e.name === a.item.name);
+const predicateFn = (e: Item, a:ActionItem<Item>) => (e.index === a.item.index);
 
 /**
  * CareTaker class accepts add, update, and delete on generic type 'I',
@@ -49,7 +49,7 @@ ct.add(list, elt);
 console.assert(list.includes(elt), 'aram was added');
 
 console.assert(list[3].value === 'dancer', 'fred is a dancer');
-ct.update(list, {index: 3, name: 'fred', value: 'accountant'});
+ct.update(list, {index: 1, name: 'fred', value: 'accountant'});
 console.assert(list[3].value === 'accountant', 'fred became an accountant');
 
 console.assert(list[4].name === 'jack', 'jack exists');
