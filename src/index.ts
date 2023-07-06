@@ -16,9 +16,6 @@ list.push({index: 5, name: 'boris', value: 'politician'});
 
 list.sort((a, b) => { return a.name.localeCompare(b.name) });
 
-// console.log(JSON.stringify(list,null,2));
-// console.log('-------------------------');
-
 /**
  * Optional comperator for sort order.
  * @param a First element to compare
